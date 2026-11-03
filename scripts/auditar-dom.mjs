@@ -31,6 +31,7 @@ import { execFileSync } from 'node:child_process';
 import { dirname, resolve, join, basename } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { randomBytes } from 'node:crypto';
+import { estadoAprovacao } from './aprovacao.mjs';
 
 /* ---------- cli ---------- */
 
@@ -39,6 +40,14 @@ const alvo = args.find((a) => !a.startsWith('-'));
 if (!alvo) {
   console.error('uso: node scripts/auditar-dom.mjs <pagina.html> [--larguras=375,500,744,1068,1440]');
   process.exit(2);
+}
+const wfArg = (args.find((a) => a.startsWith('--wireframe=')) || '').split('=')[1];
+if (wfArg) {
+  // piso 1: sem wireframe aprovado e coerente com o hash, nao ha o que auditar
+  let wf;
+  try { wf = JSON.parse(readFileSync(wfArg, 'utf8')); } catch (e) { console.error(`wireframe ilegivel: ${e.message}`); process.exit(2); }
+  const ap = estadoAprovacao(wf);
+  if (!ap.ok) { console.error(`NAO APROVADO: ${ap.motivo}`); process.exit(2); }
 }
 const larguras = (args.find((a) => a.startsWith('--larguras=')) || '')
   .split('=')[1]?.split(',').map(Number).filter(Boolean)
@@ -213,6 +222,44 @@ const SONDA = `
       L.push('IMG-SEM-DIMENSAO ' + (i.getAttribute('src') || '').split('/').pop() + ' (layout shift)');
     }
   });
+  /* --- 6b. emoji e travessao em QUALQUER texto e atributo visivel (piso da casa) --- */
+  var RE_EMOJI = /\\p{Emoji_Presentation}|\\p{Extended_Pictographic}\\uFE0F/u;
+  var RE_TRAV = /[\\u2013\\u2014]/;
+  function varre(t, onde) {
+    if (RE_EMOJI.test(t)) L.push('EMOJI ' + onde + ' "' + t.trim().replace(/\\s+/g, ' ').slice(0, 30) + '" (use SVG inline)');
+    if (RE_TRAV.test(t)) L.push('TRAVESSAO ' + onde + ' "' + t.trim().replace(/\\s+/g, ' ').slice(0, 30) + '"');
+  }
+  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  var tn;
+  while ((tn = walker.nextNode())) {
+    var pe = tn.parentElement;
+    if (!pe || /^(SCRIPT|STYLE|NOSCRIPT|PRE|CODE)$/.test(pe.tagName)) continue;
+    varre(tn.nodeValue, nome(pe));
+  }
+  document.querySelectorAll('[alt],[title],[aria-label],[placeholder]').forEach(function (el) {
+    ['alt', 'title', 'aria-label', 'placeholder'].forEach(function (a) { if (el.hasAttribute(a)) varre(el.getAttribute(a), nome(el) + '[' + a + ']'); });
+  });
+  document.querySelectorAll('title,meta[name="description"]').forEach(function (el) {
+    varre(el.tagName === 'TITLE' ? el.textContent : (el.getAttribute('content') || ''), el.tagName.toLowerCase());
+  });
+  /* --- 6c. animacao sem ramo prefers-reduced-motion (WCAG 2.3.3) --- */
+  var anima = 0, temRM = false;
+  function percorre(regras, dentroRM) {
+    for (var i = 0; i < regras.length; i++) {
+      var r = regras[i];
+      if (r.media && /prefers-reduced-motion/.test(r.media.mediaText)) { temRM = true; continue; }
+      if (r.type !== 1 && r.cssRules) { percorre(r.cssRules, dentroRM); continue; }
+      if (r.style) {
+        var td = r.style.transitionDuration || '', an = r.style.animationName || '';
+        var longa = /(^|,|\\s)(0?\\.[3-9]\\d*|[1-9]\\d*(\\.\\d+)?)s/.test(td) || /(^|\\s)(\\d{3,})ms/.test(td);
+        if ((an && an !== 'none') || longa || r.style.scrollBehavior === 'smooth') anima++;
+      }
+    }
+  }
+  for (var si = 0; si < document.styleSheets.length; si++) {
+    try { percorre(document.styleSheets[si].cssRules, false); } catch (e) { /* folha externa bloqueada */ }
+  }
+  if (anima && !temRM) L.push('SEM-REDUCED-MOTION ' + anima + ' regra(s) animam e nao ha @media (prefers-reduced-motion)');
   var h1 = document.querySelectorAll('h1').length;
   if (h1 !== 1) L.push('H1 ' + h1 + ' na pagina (tem que ser exatamente 1)');
   if (semAlt) L.push('SEM-ALT ' + semAlt + ' imagem(ns)');
@@ -303,6 +350,9 @@ const CATEGORIAS = [
   ['IMG-QUEBRADA',     'imagem nao carrega',  'grave'],
   ['SEM-SCRIM',        'texto claro sobre imagem sem camada escura', 'grave'],
   ['ALVO',             'alvo de toque abaixo de 44px', 'medio'],
+  ['EMOJI',            'emoji no texto/atributo (nunca emoji na estrutura)', 'grave'],
+  ['TRAVESSAO',        'travessao em texto de usuario final', 'medio'],
+  ['SEM-REDUCED-MOTION', 'anima sem prefers-reduced-motion', 'medio'],
   ['ICONE-GLIFO',      'icone e caractere, nao SVG',   'medio'],
   ['IMG-SEM-DIMENSAO', 'sem width/height (layout shift)', 'medio'],
   ['H1',               'contagem de h1',      'medio'],

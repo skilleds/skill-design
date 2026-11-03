@@ -176,3 +176,5 @@ Esta skill é MIT (ver `LICENSE`) e **incorpora trabalho de terceiros** sob suas
 
 Textos integrais das licenças e avisos de modificação: `THIRD_PARTY_NOTICES.md` na raiz do repositório (e anexados ao
 `LICENSE`).
+
+Herda os pisos 22–29 da `schematize-engineering` (git como trava de conclusão, deploy só do git, ops é o gate da IA, sem agents inúteis, relatório 30 min/handoff 6 h, CI remoto só antes do hml, microserviço autônomo, build em dev/hml + higiene).

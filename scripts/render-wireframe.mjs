@@ -11,6 +11,7 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import { hashWireframe, estadoAprovacao } from './aprovacao.mjs';
 
 /* ---------- constantes de layout ---------- */
 
@@ -413,3 +414,4 @@ writeFileSync(saida, render(wf), 'utf8');
 const nSec = wf.secoes.length;
 const nBloco = wf.secoes.reduce((a, s) => a + (s.blocos?.length ?? 0), 0);
 console.log(`ok  ${saida}  ·  ${nSec} secoes, ${nBloco} blocos`);
+console.log(`sha256 ${hashWireframe(wf)}  ·  ${estadoAprovacao(wf).ok ? 'aprovado' : 'NAO aprovado (node scripts/aprovacao.mjs <json> --aprovar --por NOME, depois que o humano aprovar o SVG)'}`);

@@ -3,6 +3,13 @@
 Todas as mudanças relevantes deste pacote, no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 com versionamento [SemVer](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+### Corrigido
+- Piso 1 como estado: `meta.aprovacao {por, em, sha256}` no schema, `scripts/aprovacao.mjs` (hash/aprovar/verificar), `render-wireframe` imprime o hash, `auditar-dom --wireframe=` recusa (exit 2) sem aprovação coerente.
+- `auditar-dom`: EMOJI (grave) em qualquer nó de texto e em alt/title/aria-label/placeholder (antes só folha ≤3 caracteres); TRAVESSAO em texto, atributos, title e meta description; SEM-REDUCED-MOTION por inspeção das folhas de estilo. Testes vermelho→verde ("🚀 Começar agora").
+- Checklist: foco não obscurecido (2.4.11) e arrastar (2.5.7).
+- Herda os pisos 22–29 da engineering.
+
 ## [0.2.0] — 2026-10-14
 Description reduzida para o orçamento de listagem do catálogo; sem mudança de piso.
 

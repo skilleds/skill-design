@@ -55,7 +55,7 @@ for c in "${CHROME_PATH:-}" /usr/bin/google-chrome /usr/bin/google-chrome-stable
   [ -n "$c" ] && [ -x "$c" ] && { CH="$c"; break; }
 done
 if [ -z "$CH" ]; then
-  echo "  PULADO (sem Chrome/Chromium nesta máquina): 7 casos de DOM não rodaram"; pulados=7
+  echo "  PULADO (sem Chrome/Chromium nesta máquina): 7 casos de DOM não rodaram"; pulados=14
 else
   export CHROME_PATH="$CH"
   limpa='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="description" content="x"><title>t</title></head><body><h1>Titulo</h1><p>texto</p></body></html>'
@@ -86,6 +86,34 @@ H
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="description" content="x"><title>t</title><style>.hero{position:relative;background-image:url(foto.jpg);height:300px}.hero h2{color:#fff}</style></head><body><h1>a</h1><section class="hero"><h2>Texto claro sobre foto</h2></section></body></html>
 H
   caso sem-scrim-reprova 1 "SEM-SCRIM" -- "$TMP/sem-scrim.html" --larguras=1440
+
+  cat > "$TMP/emoji.html" <<'H'
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="description" content="x"><title>t</title></head><body><h1>a</h1><button style="width:200px;height:50px">🚀 Começar agora</button></body></html>
+H
+  caso emoji-em-botao-reprova 1 "EMOJI" -- "$TMP/emoji.html" --larguras=1440
+  cat > "$TMP/emoji-alt.html" <<'H'
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="description" content="x"><title>t</title></head><body><h1>a</h1><img src="x.png" alt="foguete 🚀" width="10" height="10"></body></html>
+H
+  caso emoji-em-alt-reprova 1 "EMOJI" -- "$TMP/emoji-alt.html" --larguras=1440
+  cat > "$TMP/travessao.html" <<'H'
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="description" content="x"><title>t</title></head><body><h1>Rápido — e simples</h1></body></html>
+H
+  caso travessao-medio 0 "TRAVESSAO" -- "$TMP/travessao.html" --larguras=1440
+  cat > "$TMP/anima.html" <<'H'
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="description" content="x"><title>t</title><style>.a{transition:opacity .6s}</style></head><body><h1>a</h1><p class="a">x</p></body></html>
+H
+  caso anima-sem-reduced-motion 0 "SEM-REDUCED-MOTION" -- "$TMP/anima.html" --larguras=1440
+  cat > "$TMP/anima-ok.html" <<'H'
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="description" content="x"><title>t</title><style>.a{transition:opacity .6s}@media (prefers-reduced-motion: reduce){.a{transition:none}}</style></head><body><h1>a</h1><p class="a">x</p></body></html>
+H
+  caso anima-com-reduced-motion-passa 0 "0 grave(s), 0 medio(s)" -- "$TMP/anima-ok.html" --larguras=1440
+  # piso 1: wireframe sem aprovacao barra a auditoria
+  echo '{"meta":{"projeto":"T"},"secoes":[]}' > "$TMP/w.json"
+  caso wireframe-nao-aprovado-barra 2 "NAO APROVADO" -- "$TMP/limpa.html" --wireframe="$TMP/w.json"
+  node "$AQUI/aprovacao.mjs" "$TMP/w.json" --aprovar --por teste >/dev/null
+  caso wireframe-aprovado-passa 0 "0 grave(s)" -- "$TMP/limpa.html" --larguras=1440 --wireframe="$TMP/w.json"
+  sed -i 's/"projeto": "T"/"projeto": "T2"/' "$TMP/w.json"
+  caso wireframe-alterado-barra 2 "mudou depois da aprovacao" -- "$TMP/limpa.html" --wireframe="$TMP/w.json"
 
   # a pagina com `$&` no HTML nao pode ser reescrita pelo padrao de substituicao
   printf '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="description" content="x"><title>t</title></head><body><h1>Preço $& e $1</h1></body></html>' > "$TMP/dolar.html"

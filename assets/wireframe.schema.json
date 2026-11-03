@@ -21,6 +21,17 @@
           "type": "string",
           "description": "Nome do cliente ou produto."
         },
+        "aprovacao": {
+          "type": "object",
+          "description": "Piso 1 como estado: gravado por scripts/aprovacao.mjs --aprovar apos o humano aprovar o SVG. sha256 cobre o wireframe sem este campo; mudou o desenho, o hash nao bate e o build recusa.",
+          "required": ["por", "em", "sha256"],
+          "additionalProperties": false,
+          "properties": {
+            "por": { "type": "string" },
+            "em": { "type": "string", "description": "ISO-8601" },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
         "origem": {
           "type": "string",
           "description": "De onde veio a referencia: caminho da imagem, URL, ou 'sem referencia'."

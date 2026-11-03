@@ -12,7 +12,7 @@ Entrada: $ARGUMENTS
 `nextjs` monta `./app`, `./components`, `./styles`; `liquid` sai em `./sections/<secao-id>.liquid`.
 
 1. Localize o `wireframe.json` no diretório atual. Não existe? Rode `/design-wire` primeiro: **não construa sem
-   wireframe aprovado** (piso 1). `meta.stack` em `"a-definir"`: pergunte a stack e **grave no arquivo**.
+   wireframe aprovado** (piso 1): rode `node scripts/aprovacao.mjs wireframe.json --verificar`; exit ≠ 0 (sem `meta.aprovacao` ou hash divergente) = pare. Só grave a aprovação (`--aprovar --por NOME`) depois que o humano aprovar o SVG; ao auditar, passe `--wireframe=wireframe.json` ao `auditar-dom`. `meta.stack` em `"a-definir"`: pergunte a stack e **grave no arquivo**.
 2. Leia `references/tokens-tipografia-cor.md`, `references/recusas-anti-ai-slop.md` e `references/icones.md`. Se
    `meta.movimento` for `narrativo`, leia `references/animacao.md`. Sem referência visual, leia `references/do-zero.md`
    antes de qualquer coisa.

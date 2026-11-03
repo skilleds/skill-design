@@ -56,6 +56,8 @@ lote de correção, no máximo uma confirmação (`references/review.md` §6).
 - [ ] UI até 300ms; reveal de marketing até 600ms; saída mais rápida que entrada
 - [ ] só `transform` e `opacity`; sem `transition: all`
 - [ ] o conteúdo é visível sem JS e com `prefers-reduced-motion` (estado oculto só sob `.js-anima`), testado de verdade
+- [ ] o auditor acusa `SEM-REDUCED-MOTION` se há animação/transição longa sem `@media (prefers-reduced-motion)`; resolva antes de entregar
+- [ ] foco do teclado **não obscurecido** por header sticky/vidro (WCAG 2.4.11 AA): tabule a página inteira e confira com `scroll-padding-top`/`scroll-margin`; sem alternativa de arrastar não há 2.5.7
 - [ ] hover atrás de `@media (hover: hover) and (pointer: fine)`
 - [ ] se há GSAP: versão presa, `gsap.matchMedia()` com ramo reduzido e conteúdo visível, `markers` removidos
   (`grep -c markers` dá 0), e a página comunica o mesmo se a animação sumir

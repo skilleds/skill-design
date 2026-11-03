@@ -88,6 +88,18 @@ EX="$AQUI/../assets/exemplos/lp-franquia.wireframe.json"
 saida="$(node "$SUT" "$EX" "$TMP/ex.svg" 2>&1)"; rc=$?
 if [ "$rc" = 0 ] && grep -q "8 secoes" <<<"$saida"; then echo "  ok     exemplo"; ok=$((ok+1)); else echo "  FALHOU exemplo (rc=$rc): $saida"; fail=$((fail+1)); fi
 
+echo "== aprovacao (piso 1 como estado) =="
+d="$TMP/aprov"; mkdir -p "$d"
+echo '{"meta":{"projeto":"T"},"secoes":[{"id":"h","layout":"centro","blocos":[{"tipo":"h1","texto":"x"}]}]}' > "$d/w.json"
+saida="$(node "$SUT" "$d/w.json" "$d/w.svg" 2>&1)"
+if grep -q "NAO aprovado" <<<"$saida" && grep -qE "sha256 [0-9a-f]{64}" <<<"$saida"; then echo "  ok     imprime hash e acusa nao aprovado"; ok=$((ok+1)); else echo "  FALHOU hash/nao-aprovado: $saida"; fail=$((fail+1)); fi
+node "$AQUI/aprovacao.mjs" "$d/w.json" --verificar >/dev/null 2>&1; r1=$?
+node "$AQUI/aprovacao.mjs" "$d/w.json" --aprovar --por teste >/dev/null 2>&1
+node "$AQUI/aprovacao.mjs" "$d/w.json" --verificar >/dev/null 2>&1; r2=$?
+sed -i 's/"texto": "x"/"texto": "y"/' "$d/w.json"
+node "$AQUI/aprovacao.mjs" "$d/w.json" --verificar >/dev/null 2>&1; r3=$?
+if [ "$r1" = 1 ] && [ "$r2" = 0 ] && [ "$r3" = 1 ]; then echo "  ok     verificar: sem aprovacao 1, aprovado 0, alterado 1"; ok=$((ok+1)); else echo "  FALHOU verificar: $r1 $r2 $r3"; fail=$((fail+1)); fi
+
 echo "== determinismo: mesmo JSON, mesmo SVG =="
 node "$SUT" "$EX" "$TMP/ex2.svg" >/dev/null 2>&1
 if cmp -s "$TMP/ex.svg" "$TMP/ex2.svg"; then echo "  ok     determinismo"; ok=$((ok+1)); else echo "  FALHOU determinismo"; fail=$((fail+1)); fi
