@@ -3,7 +3,7 @@
 Todas as mudanças relevantes deste pacote, no formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 com versionamento [SemVer](https://semver.org/lang/pt-BR/).
 
-## [Não lançado]
+## [0.3.0] — 2026-11-03
 ### Corrigido
 - Piso 1 como estado: `meta.aprovacao {por, em, sha256}` no schema, `scripts/aprovacao.mjs` (hash/aprovar/verificar), `render-wireframe` imprime o hash, `auditar-dom --wireframe=` recusa (exit 2) sem aprovação coerente.
 - `auditar-dom`: EMOJI (grave) em qualquer nó de texto e em alt/title/aria-label/placeholder (antes só folha ≤3 caracteres); TRAVESSAO em texto, atributos, title e meta description; SEM-REDUCED-MOTION por inspeção das folhas de estilo. Testes vermelho→verde ("🚀 Começar agora").
